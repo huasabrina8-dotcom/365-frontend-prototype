@@ -1,0 +1,13 @@
+---
+description: Only push to GitHub when the user says 定稿
+alwaysApply: true
+---
+
+# GitHub 推送：仅「定稿」
+
+- 日常改原型、改文档、改图 **不要** `git push`，也不要主动创建提交后推远程。
+- 即使用户说「保存」「提交」「更新仓库」，若没有说 **定稿**，只做本地改动；提交仅在用户明确要求 commit 时才做，且仍不推送。
+- **只有**用户发出指令 **定稿**（可带说明）时，才：
+  1. 如有未提交改动：按用户 git 规范做本地 commit
+  2. `git push` 到 `origin` 当前分支（默认 `main`）
+- 禁止 force push。禁止在未听到「定稿」时把更新推到 GitHub。
