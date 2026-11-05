@@ -24,7 +24,7 @@
     if (NAV[p]) return NAV[p];
     if (p.indexOf('/category/') === 0) return p.split('/')[2].toLowerCase();
     if (p.indexOf('/vip') === 0) return 'vip';
-    if (p.indexOf('/promo') === 0 || p.indexOf('/activity') === 0) return 'promo';
+    if (p === '/leaderboard' || p.indexOf('/promo') === 0 || p.indexOf('/activity') === 0) return 'promo';
     if (p === '/bonus') return 'bonus';
     return 'home';
   }
@@ -48,6 +48,7 @@
     if (p === '/bonus') return J365Pages.bonus(page);
     if (p.indexOf('/category/') === 0) return J365Pages.category(page, decodeURIComponent(p.split('/')[2] || 'Slot'));
     if (p === '/promotions') return J365Pages.promotions(page);
+    if (p === '/leaderboard') return J365Pages.leaderboard(page);
     if (p.indexOf('/activity-detail/') === 0) return J365Pages.activity(page, p.split('/')[2]);
     if (p === '/vipClub') return J365Pages.vip(page);
     if (p === '/agent') return J365Pages.agent(page);

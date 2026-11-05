@@ -283,6 +283,20 @@ img { max-width: 100%; display: block; }
 .demo-bar button, .demo-bar a { border: 0; background: #333; color: #fff; border-radius: 6px; padding: 4px 8px; }
 .demo-bar button.on { background: var(--p1); }
 
+.sub { font-size: 12px; color: #888; }
+.lb-hero { background: linear-gradient(120deg, #6D35FF, #f26839); color: #fff; border-radius: 12px; padding: 18px 20px; }
+.lb-hero b { font-size: 22px; }
+.lb-hero p { margin: 6px 0 0; font-size: 13px; }
+.lb-grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 12px; }
+.lb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lb-table th { text-align: left; color: #888; font-weight: 600; padding: 8px; }
+.lb-table td { padding: 10px 8px; border-top: 1px solid var(--line); }
+.lb-table tr.me { background: #fff4ee; }
+.lb-prize { font-weight: 800; }
+.medal { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 800; }
+.medal.m1 { background: #e8b931; }
+.medal.m2 { background: #9aa3ad; }
+.medal.m3 { background: #c47b4a; }
 .skel .g-art, .skel .hero, .skel .tile { background: linear-gradient(90deg, #eee, #f7f7f7, #eee) !important; color: transparent !important; }
 .stand { min-height: 100vh; display: grid; place-items: center; background: #f0f2f5; }
 .stand-box { display: flex; align-items: center; gap: 40px; }
@@ -291,6 +305,6 @@ img { max-width: 100%; display: block; }
 @media (max-width: 1100px) {
   .games { grid-template-columns: repeat(4, 1fr); }
   .side { display: none; }
-  .vip-hero, .grid-2, .modal.wide, .stat-grid, .amt-grid { grid-template-columns: 1fr 1fr; }
+  .vip-hero, .grid-2, .modal.wide, .stat-grid, .amt-grid, .lb-grid { grid-template-columns: 1fr 1fr; }
   .grid-3 { grid-template-columns: 1fr 1fr; }
 }

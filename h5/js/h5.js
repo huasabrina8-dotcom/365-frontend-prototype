@@ -39,7 +39,8 @@
   }
   function viewPromo() {
     return J365.promos.map(function (p) {
-      return '<a class="promo" style="display:block;background:linear-gradient(180deg,#FFB325,#FF7344)" href="#/activity-detail/' + p.id + '"><b>' + p.title + '</b><p>' + p.desc + '</p></a>';
+      var href = p.id === 'p9' ? '#/leaderboard' : '#/activity-detail/' + p.id;
+      return '<a class="promo" style="display:block;background:linear-gradient(180deg,#FFB325,#FF7344)" href="' + href + '"><b>' + p.title + '</b><p>' + p.desc + '</p></a>';
     }).join('');
   }
   function viewVip() {
@@ -67,7 +68,37 @@
       '<div class="field"><input id="wdA" placeholder="Min 200 · Cash ' + money(S.cash) + '"></div>' +
       '<button class="btn pri block" id="doWd">Submit</button></div>';
   }
+  function viewLeaderboard() {
+    var group = viewLeaderboard.group || 'type';
+    var boardId = viewLeaderboard.boardId || 'lb-slot';
+    var groups = [{ id: 'type', label: 'Game type' }, { id: 'vendor', label: 'Provider' }, { id: 'game', label: 'Game' }];
+    var list = J365.boards.filter(function (b) { return b.scope === group; });
+    var board = list.filter(function (b) { return b.id === boardId; })[0] || list[0];
+    viewLeaderboard.boardId = board.id;
+    var claimed = !!(S.rankClaim && S.rankClaim[board.id]);
+    var prize = board.myRank ? J365.rankPrize(board.myRank, board.prizes) : 0;
+    var me;
+    if (!S.loggedIn) me = '<p>Login to see your rank.</p><button class="btn pri block" data-act="login">Login</button>';
+    else if (board.phase === 'live' && board.myRank) me = '<p>Rank <b>' + board.myRank + '</b> · ' + money(board.myTurnover) + '</p><p>Estimated ' + money(prize) + '</p><button class="btn pri block" disabled>Locks at round end</button>';
+    else if (board.phase === 'claim' && board.myRank && !claimed) me = '<p>Rank <b>' + board.myRank + '</b> · Prize ' + money(prize) + '</p><button class="btn pri block" id="lbClaim">Claim</button>';
+    else if (board.phase === 'claim' && claimed) me = '<p>Rank ' + board.myRank + ' claimed ' + money(prize) + '</p><button class="btn pri block" disabled>Claimed</button>';
+    else me = '<p>Not ranked. Turnover ' + money(board.myTurnover) + '</p><button class="btn pri block" disabled>Not ranked</button>';
+    var rows = board.rows.map(function (r) {
+      return '<div class="li"><div>' + r.rank + ' · ' + J365.maskAccount(r.account) + '</div><b>' + money(J365.rankPrize(r.rank, board.prizes)) + '</b></div>';
+    }).join('');
+    return '<div class="hero"><b>Leaderboard</b><p>Fixed prize by rank</p></div>' +
+      '<div class="htabs" id="lbScopes">' + groups.map(function (g) {
+        return '<button class="htab' + (g.id === group ? ' on' : '') + '" data-scope="' + g.id + '">' + g.label + '</button>';
+      }).join('') + '</div>' +
+      '<div class="htabs" id="lbBoards">' + list.map(function (b) {
+        return '<button class="htab' + (b.id === board.id ? ' on' : '') + '" data-board="' + b.id + '">' + b.target + '</button>';
+      }).join('') + '</div>' +
+      '<div class="card"><b>' + board.title + '</b><p>' + board.start + ' – ' + board.end + '</p>' + me + '</div>' +
+      '<div class="card"><b>Ranking</b><p>Turnover sets the rank. Prize stays fixed.</p>' + rows + '</div>';
+  }
+
   function viewMore(p) {
+    if (p === '/leaderboard') return viewLeaderboard();
     if (p.indexOf('/activity-detail/') === 0) {
       var item = J365.promos.filter(function (x) { return x.id === p.split('/')[2]; })[0] || J365.promos[0];
       return '<div class="card"><h3>' + item.title + '</h3><p>' + item.desc + '</p><a class="btn pri" href="#/deposit">Join</a></div>';
@@ -94,7 +125,7 @@
   }
 
   function tabOf(p) {
-    if (p.indexOf('/promo') === 0 || p.indexOf('/activity') === 0) return 'promo';
+    if (p === '/leaderboard' || p.indexOf('/promo') === 0 || p.indexOf('/activity') === 0) return 'promo';
     if (p.indexOf('/vip') === 0) return 'vip';
     if (p.indexOf('/account') === 0 || p === '/agent' || p === '/daily-task') return 'me';
     if (p === '/deposit' || p === '/withdraw') return 'home';
@@ -154,6 +185,42 @@
     if (cb) cb.onclick = function () {
       if (!S.loggedIn) return openLogin();
       S.cash += S.pendingCashback; S.pendingCashback = 0; J365.persist(); toast('Claimed'); render();
+    };
+    document.querySelectorAll('[data-scope]').forEach(function (b) {
+      b.onclick = function () {
+        viewLeaderboard.group = b.getAttribute('data-scope');
+        var first = J365.boards.filter(function (x) { return x.scope === viewLeaderboard.group; })[0];
+        viewLeaderboard.boardId = first ? first.id : '';
+        render();
+      };
+    });
+    document.querySelectorAll('#lbBoards [data-board]').forEach(function (b) {
+      b.onclick = function () {
+        viewLeaderboard.boardId = b.getAttribute('data-board');
+        render();
+      };
+    });
+    var lb = $('lbClaim');
+    if (lb) lb.onclick = function () {
+      if (!S.loggedIn) return openLogin();
+      var board = J365.boards.filter(function (x) { return x.id === viewLeaderboard.boardId; })[0];
+      if (!board || (S.rankClaim && S.rankClaim[board.id])) return;
+      var pay = J365.rankPrize(board.myRank, board.prizes);
+      S.rankClaim = S.rankClaim || {};
+      S.rankClaim[board.id] = 1;
+      S.cash += pay;
+      J365.addTxn({
+        id: 'T' + Date.now(),
+        type: 'Leaderboard',
+        amount: pay,
+        status: '已领取',
+        time: J365.fmt(new Date()),
+        channel: 'Bonus',
+        order: 'L' + Date.now()
+      });
+      J365.persist();
+      toast('Claimed ' + money(pay));
+      render();
     };
     var grab = $('grab');
     if (grab) grab.onclick = function () { if (!S.loggedIn) return openLogin(); S.bonus += 8.88; J365.persist(); toast('₱ 8.88'); };

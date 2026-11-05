@@ -88,13 +88,14 @@
   P.promotions = function (page) {
     page.innerHTML = crumb([['Home', '#/home'], ['Promotions']]) +
       '<div class="tabs" id="promoTabs">' +
-      ['All', 'Cashback', 'Rebate', 'Lucky Spin', 'Money Rain', 'Affiliate', 'Bonus', 'Daily Tasks'].map(function (t, i) {
+      ['All', 'Cashback', 'Rebate', 'Lucky Spin', 'Money Rain', 'Affiliate', 'Bonus', 'Daily Tasks', 'Leaderboard'].map(function (t, i) {
         return '<button class="tab' + (i === 0 ? ' on' : '') + '" type="button" data-pt="' + t + '">' + t + '</button>';
       }).join('') + '</div><div class="grid-3" id="promoGrid"></div>';
     function draw(type) {
       var list = J365.promos.filter(function (p) { return type === 'All' || p.tag === type; });
       document.getElementById('promoGrid').innerHTML = list.map(function (p) {
-        return '<a class="promo-card tone-' + p.tone + '" href="#/activity-detail/' + p.id + '"><span class="tag">' + p.tag + '</span><b>' + p.title + '</b><p>' + p.desc + '</p></a>';
+        var href = p.id === 'p9' ? '#/leaderboard' : '#/activity-detail/' + p.id;
+        return '<a class="promo-card tone-' + p.tone + '" href="' + href + '"><span class="tag">' + p.tag + '</span><b>' + p.title + '</b><p>' + p.desc + '</p></a>';
       }).join('') || empty();
     }
     draw('All');
@@ -598,6 +599,131 @@
     } else {
       page.innerHTML = '<div class="stand-box"><div class="gear">⛔</div><div><h1>Access Restricted</h1><p>Your IP / region is not allowed. Contact support if this is a mistake.</p><button class="btn pri" type="button" data-act="chat">Live Chat</button></div></div>';
     }
+  };
+
+  P.leaderboard = function (page) {
+    var groups = [
+      { id: 'type', label: 'Game type' },
+      { id: 'vendor', label: 'Provider' },
+      { id: 'game', label: 'Game' }
+    ];
+    var group = 'type';
+    var boardId = 'lb-slot';
+    function leftText(end) {
+      var t = new Date(String(end).replace(/-/g, '/')).getTime() - Date.now();
+      if (isNaN(t) || t <= 0) return 'Round ended';
+      var d = Math.floor(t / 86400000);
+      var h = Math.floor((t % 86400000) / 3600000);
+      var m = Math.floor((t % 3600000) / 60000);
+      return d + 'd ' + h + 'h ' + m + 'm left';
+    }
+    function medal(rank) {
+      if (rank <= 3) return '<span class="medal m' + rank + '">' + rank + '</span>';
+      return String(rank);
+    }
+    function draw() {
+      var list = J365.boards.filter(function (b) { return b.scope === group; });
+      var board = list.filter(function (b) { return b.id === boardId; })[0] || list[0];
+      if (!board) return;
+      boardId = board.id;
+      var claimed = !!(S.rankClaim && S.rankClaim[board.id]);
+      var prize = board.myRank ? J365.rankPrize(board.myRank, board.prizes) : 0;
+      var below = !board.myRank && Number(board.myTurnover) < Number(board.minBet);
+      var me = '';
+      var btn = '';
+      if (!S.loggedIn) {
+        me = '<p>Login to see your rank and prize on this board.</p>';
+        btn = '<button class="btn pri" type="button" data-act="login">Login</button>';
+      } else if (board.phase === 'live' && board.myRank) {
+        me = '<p>Rank <b>' + board.myRank + '</b> · Valid turnover <b>' + J365.money(board.myTurnover) + '</b></p>' +
+          '<p>Estimated prize <b>' + J365.money(prize) + '</b>. This amount is fixed for the rank.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Locks at round end</button>';
+      } else if (board.phase === 'live' && below) {
+        me = '<p>Valid turnover <b>' + J365.money(board.myTurnover) + '</b> is below the ' + J365.money(board.minBet) + ' entry line.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Not ranked</button>';
+      } else if (board.phase === 'live') {
+        me = '<p>Valid turnover <b>' + J365.money(board.myTurnover) + '</b>. You are outside the paid ranks.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Not ranked</button>';
+      } else if (board.myRank && claimed) {
+        me = '<p>Rank <b>' + board.myRank + '</b> · Prize <b>' + J365.money(prize) + '</b> claimed.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Claimed</button>';
+      } else if (board.myRank) {
+        me = '<p>Rank <b>' + board.myRank + '</b> · Valid turnover <b>' + J365.money(board.myTurnover) + '</b></p>' +
+          '<p>Prize <b>' + J365.money(prize) + '</b> is ready. Claim before ' + board.claimUntil + '.</p>';
+        btn = '<button class="btn pri" type="button" id="lbClaim">Claim ' + J365.money(prize) + '</button>';
+      } else {
+        me = '<p>You are not on this settled board.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Not ranked</button>';
+      }
+      var rows = board.rows.map(function (r) {
+        var mine = S.loggedIn && r.account === S.member.account;
+        var pay = J365.rankPrize(r.rank, board.prizes);
+        return '<tr class="' + (mine ? 'me' : '') + '"><td>' + medal(r.rank) + '</td><td>' + J365.maskAccount(r.account) +
+          '</td><td>' + J365.money(r.turnover) + '</td><td class="lb-prize">' + J365.money(pay) + '</td></tr>';
+      }).join('');
+      var ladder = board.prizes.map(function (p) {
+        var label = p.from === p.to ? 'Rank ' + p.from : 'Rank ' + p.from + '–' + p.to;
+        return '<div class="li"><div>' + label + '</div><b>' + J365.money(p.amount) + '</b></div>';
+      }).join('');
+      page.innerHTML = crumb([['Home', '#/home'], ['Promotions', '#/promotions'], ['Leaderboard']]) +
+        '<section class="lb-hero"><b>' + board.title + '</b><p>' + board.cycle + ' · ' + board.start + ' – ' + board.end + '</p>' +
+        '<p>' + leftText(board.phase === 'live' ? board.end : board.claimUntil || board.end) + ' · Updates every 10 minutes · GMT+8</p></section>' +
+        '<div class="tabs" id="lbScopes">' + groups.map(function (g) {
+          return '<button class="tab' + (g.id === group ? ' on' : '') + '" type="button" data-scope="' + g.id + '">' + g.label + '</button>';
+        }).join('') + '</div>' +
+        '<div class="tabs" id="lbBoards">' + list.map(function (b) {
+          return '<button class="tab' + (b.id === board.id ? ' on' : '') + '" type="button" data-board="' + b.id + '">' + b.target + '</button>';
+        }).join('') + '</div>' +
+        '<div class="lb-grid"><section class="card"><h3>Your place</h3>' + me +
+        '<div class="row">' + btn + '<a class="btn ghost" href="' + board.play + '">Play</a></div>' +
+        '<p class="sub">Entry line ' + J365.money(board.minBet) + ' valid turnover · ' + board.reward + ' · turnover ×' + board.wager + '</p></section>' +
+        '<section class="card"><h3>Fixed prizes</h3><p class="sub">Each rank pays this amount. Turnover does not split a pool.</p>' + ladder + '</section></div>' +
+        '<section class="card" style="margin-top:12px"><table class="lb-table"><thead><tr><th>Rank</th><th>Player</th><th>Valid turnover</th><th>Prize</th></tr></thead><tbody>' +
+        rows + '</tbody></table><p class="sub">Last refresh 2026-11-05 11:00:00. Same turnover: whoever reached it first ranks higher.</p></section>' +
+        '<section class="card" style="margin-top:12px"><h3>Rules</h3>' +
+        '<p>1. Only valid turnover on this board counts. Void and cancelled bets are excluded.</p>' +
+        '<p>2. Turnover decides the rank. The prize is the fixed amount for that rank.</p>' +
+        '<p>3. Reach ' + J365.money(board.minBet) + ' valid turnover to appear. The board refreshes every 10 minutes.</p>' +
+        '<p>4. Daily rounds settle at 00:10 GMT+8 the next day. Weekly rounds settle Monday 00:10. An event-period board settles once at the end time.</p>' +
+        '<p>5. Manual claim stays open for 72 hours after settle, then expires. A cash prize needs turnover ×' + board.wager + ' before withdrawal. ×0 means no turnover lock.</p>' +
+        '<p>6. One account keeps one rank on each board. Prizes from different boards are paid separately.</p></section>';
+      document.getElementById('lbScopes').onclick = function (e) {
+        var b = e.target.closest('[data-scope]'); if (!b) return;
+        group = b.getAttribute('data-scope');
+        var first = J365.boards.filter(function (x) { return x.scope === group; })[0];
+        boardId = first ? first.id : boardId;
+        draw();
+      };
+      document.getElementById('lbBoards').onclick = function (e) {
+        var b = e.target.closest('[data-board]'); if (!b) return;
+        boardId = b.getAttribute('data-board');
+        draw();
+      };
+      var claim = document.getElementById('lbClaim');
+      if (claim) claim.onclick = function () {
+        if (!S.loggedIn) return J365Shell.requireAuth('#/leaderboard');
+        if (S.rankClaim && S.rankClaim[board.id]) return J365Shell.toast('Already claimed');
+        var pay = J365.rankPrize(board.myRank, board.prizes);
+        S.rankClaim = S.rankClaim || {};
+        S.rankClaim[board.id] = 1;
+        S.cash += pay;
+        J365.addTxn({
+          id: 'T' + Date.now(),
+          type: 'Leaderboard',
+          amount: pay,
+          status: '已领取',
+          time: J365.fmt(new Date()),
+          channel: 'Bonus',
+          order: 'L' + Date.now()
+        });
+        J365.persist();
+        var bal = document.querySelector('.hd .bal span');
+        if (bal) bal.innerHTML = '<i class="coin g"></i>' + J365.money(S.cash).replace('₱ ', '');
+        J365Shell.toast('Claimed ' + J365.money(pay) + '. Turnover ×' + board.wager + ' before withdrawal.');
+        draw();
+      };
+    }
+    draw();
   };
 
   global.J365Pages = P;

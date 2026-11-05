@@ -62,8 +62,116 @@
     { id: 'p5', type: 'Affiliate', title: 'Earn ₱50,000 Per Day', desc: 'Unlimited referrals. Commission settled every 24 hours.', tag: 'Affiliate', tone: 'purple' },
     { id: 'p6', type: 'First Deposit', title: '50% First Deposit Bonus', desc: 'First deposit ₱500+ unlocks 50% bonus credit.', tag: 'Bonus', tone: 'orange' },
     { id: 'p7', type: 'Daily Tasks', title: 'Daily Tasks', desc: 'Finish deposit / bet / login tasks to claim ₱36.50.', tag: 'Daily Tasks', tone: 'green' },
-    { id: 'p8', type: 'Slot Cashback', title: 'Slot Daily Cashback', desc: 'Slot net loss cashback up to 8%. Auto next day 12:00.', tag: 'Cashback', tone: 'blue' }
+    { id: 'p8', type: 'Slot Cashback', title: 'Slot Daily Cashback', desc: 'Slot net loss cashback up to 8%. Auto next day 12:00.', tag: 'Cashback', tone: 'blue' },
+    { id: 'p9', type: 'Leaderboard', title: 'Leaderboard', desc: 'Fixed prizes by rank. Turnover decides your place, not your share of a pool.', tag: 'Leaderboard', tone: 'purple' }
   ];
+
+  var BOARDS = [
+    {
+      id: 'lb-slot', scope: 'type', target: 'Slot', play: '#/category/Slot',
+      title: 'Slot Weekly Leaderboard', cycle: 'Weekly',
+      start: '2026-11-02 00:00:00', end: '2026-11-08 23:59:59',
+      phase: 'live', minBet: 100, wager: 1, reward: 'Cash',
+      myTurnover: 186420.50, myRank: 6,
+      prizes: [
+        { from: 1, to: 1, amount: 8000 },
+        { from: 2, to: 2, amount: 5000 },
+        { from: 3, to: 3, amount: 3000 },
+        { from: 4, to: 10, amount: 350 },
+        { from: 11, to: 20, amount: 150 }
+      ],
+      rows: [
+        { rank: 1, account: 'maria_ph', turnover: 842600.00 },
+        { rank: 2, account: 'Zipper123', turnover: 610240.50 },
+        { rank: 3, account: 'vbsxun440128', turnover: 488900.00 },
+        { rank: 4, account: 'ryucam661045', turnover: 266100.25 },
+        { rank: 5, account: 'jlnpwa552017', turnover: 210880.00 },
+        { rank: 6, account: 'wjfytn329022', turnover: 186420.50 },
+        { rank: 7, account: 'hwpqer229833', turnover: 142330.00 },
+        { rank: 8, account: 'ktdqio773910', turnover: 98050.75 }
+      ]
+    },
+    {
+      id: 'lb-casino', scope: 'type', target: 'Casino', play: '#/category/Casino',
+      title: 'Casino Weekly Leaderboard', cycle: 'Weekly',
+      start: '2026-11-02 00:00:00', end: '2026-11-08 23:59:59',
+      phase: 'live', minBet: 100, wager: 1, reward: 'Cash',
+      myTurnover: 86.50, myRank: 0,
+      prizes: [
+        { from: 1, to: 1, amount: 8000 },
+        { from: 2, to: 2, amount: 5000 },
+        { from: 3, to: 3, amount: 3000 },
+        { from: 4, to: 10, amount: 350 },
+        { from: 11, to: 20, amount: 150 }
+      ],
+      rows: [
+        { rank: 1, account: 'Zipper133', turnover: 220400.00 },
+        { rank: 2, account: 'juanok01', turnover: 188220.50 },
+        { rank: 3, account: 'maria_ph', turnover: 166000.00 },
+        { rank: 4, account: 'Zipper123', turnover: 99080.00 },
+        { rank: 5, account: 'ryucam661045', turnover: 77440.25 },
+        { rank: 6, account: 'jlnpwa552017', turnover: 55210.00 },
+        { rank: 7, account: 'vbsxun440128', turnover: 30110.00 },
+        { rank: 8, account: 'hwpqer229833', turnover: 12880.50 }
+      ]
+    },
+    {
+      id: 'lb-jili', scope: 'vendor', target: 'JILI', play: '#/category/Slot',
+      title: 'JILI Daily Leaderboard', cycle: 'Daily',
+      start: '2026-11-04 00:00:00', end: '2026-11-04 23:59:59',
+      phase: 'claim', claimUntil: '2026-11-08 00:10:00', minBet: 100, wager: 1, reward: 'Cash',
+      myTurnover: 96440.00, myRank: 3,
+      prizes: [
+        { from: 1, to: 1, amount: 3000 },
+        { from: 2, to: 2, amount: 2000 },
+        { from: 3, to: 3, amount: 1500 },
+        { from: 4, to: 10, amount: 200 }
+      ],
+      rows: [
+        { rank: 1, account: 'maria_ph', turnover: 210660.00 },
+        { rank: 2, account: 'Zipper123', turnover: 154320.50 },
+        { rank: 3, account: 'wjfytn329022', turnover: 96440.00 },
+        { rank: 4, account: 'vbsxun440128', turnover: 80220.00 },
+        { rank: 5, account: 'jlnpwa552017', turnover: 64110.25 },
+        { rank: 6, account: 'ryucam661045', turnover: 42080.00 },
+        { rank: 7, account: 'hwpqer229833', turnover: 18880.00 },
+        { rank: 8, account: 'ktdqio773910', turnover: 9600.50 }
+      ]
+    },
+    {
+      id: 'lb-bounty', scope: 'game', target: 'Wild Bounty Showdown', play: '#/category/Slot',
+      title: 'Wild Bounty Showdown', cycle: 'This event',
+      start: '2026-11-01 00:00:00', end: '2026-11-30 23:59:59',
+      phase: 'live', minBet: 100, wager: 1, reward: 'Cash',
+      myTurnover: 512800.00, myRank: 1,
+      prizes: [
+        { from: 1, to: 1, amount: 8000 },
+        { from: 2, to: 2, amount: 4000 },
+        { from: 3, to: 3, amount: 2000 },
+        { from: 4, to: 10, amount: 500 }
+      ],
+      rows: [
+        { rank: 1, account: 'wjfytn329022', turnover: 512800.00 },
+        { rank: 2, account: 'maria_ph', turnover: 466120.50 },
+        { rank: 3, account: 'Zipper123', turnover: 388400.00 },
+        { rank: 4, account: 'vbsxun440128', turnover: 255600.00 },
+        { rank: 5, account: 'jlnpwa552017', turnover: 198440.25 },
+        { rank: 6, account: 'ryucam661045', turnover: 142200.00 },
+        { rank: 7, account: 'hwpqer229833', turnover: 88660.00 },
+        { rank: 8, account: 'ktdqio773910', turnover: 42110.50 }
+      ]
+    }
+  ];
+
+  function maskAccount(a) {
+    a = String(a || '');
+    if (a.length <= 6) return a;
+    return a.slice(0, 4) + '***' + a.slice(-3);
+  }
+  function rankPrize(rank, prizes) {
+    var hit = (prizes || []).filter(function (p) { return rank >= Number(p.from) && rank <= Number(p.to); })[0];
+    return hit ? Number(hit.amount) : 0;
+  }
 
   function seed() {
     return {
@@ -138,7 +246,8 @@
       ],
       agent: { todayReg: 2, todayNew: 1, todayBets: 1880.00, todayComm: 18.80, totalReg: 28, totalPlayers: 19, totalBets: 47280.50, totalComm: 472.80, unpaid: 320.00, paid: 152.80, level: 1 },
       deposits: [],
-      withdraws: []
+      withdraws: [],
+      rankClaim: {}
     };
   }
 
@@ -184,6 +293,9 @@
     providers: PROVIDERS,
     cats: CATS,
     promos: PROMOS,
+    boards: BOARDS,
+    maskAccount: maskAccount,
+    rankPrize: rankPrize,
     unread: unread,
     addTxn: addTxn,
     seed: seed
