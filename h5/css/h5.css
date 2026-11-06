@@ -64,4 +64,27 @@ body { font-family: var(--font); color: var(--ink); }
 .amt button { height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 8px; }
 .amt button.on { border-color: var(--p1); color: var(--p1); }
 .empty { text-align: center; color: #888; padding: 24px; }
+.lbh { border-radius: 10px; color: #fff; padding: 14px; margin-bottom: 8px; background: linear-gradient(120deg, #6D35FF, #f26839); }
+.lbh b { display: block; font-size: 16px; line-height: 1.35; }
+.lbh p, .lbh .k { margin: 4px 0 0; font-size: 11px; opacity: .92; }
+.lbq { background: #fff; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 12px; }
+.lbp { display: flex; align-items: flex-end; gap: 6px; margin: 8px 0; }
+.lbp i { flex: 1; text-align: center; border-radius: 8px 8px 4px 4px; color: #fff; font-style: normal; padding: 6px 2px; }
+.lbp i span, .lbp i b { display: block; }
+.lbp i span { font-size: 11px; opacity: .9; }
+.lbp i b { font-size: 12px; }
+.lbp .p1 { background: #e8b931; min-height: 72px; }
+.lbp .p2 { background: #9aa3ad; min-height: 56px; }
+.lbp .p3 { background: #c47b4a; min-height: 48px; }
+.lbr, .lb-you { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 6px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.lbr small, .lb-you small, .card .sub { color: #888; font-size: 11px; }
+.lbr.me { background: #fff4ee; margin: 0 -8px; padding: 8px; border-radius: 8px; }
+.lbr.head { color: #888; font-size: 11px; }
+.ava { width: 22px; height: 22px; border-radius: 50%; background: #6D35FF; color: #fff; display: inline-grid; place-items: center; font-size: 10px; font-weight: 800; margin-right: 4px; vertical-align: middle; }
+.lb-you { margin-top: 8px; padding: 8px; border-radius: 8px; background: #eef6ff; border-bottom: 0; }
+.medal { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 11px; font-weight: 800; }
+.medal.m1 { background: #e8b931; }
+.medal.m2 { background: #9aa3ad; }
+.medal.m3 { background: #c47b4a; }
+.how p { margin: 6px 0; font-size: 12px; }
 [hidden] { display: none !important; }

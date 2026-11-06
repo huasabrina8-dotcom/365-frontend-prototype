@@ -63,7 +63,7 @@
     { id: 'p6', type: 'First Deposit', title: '50% First Deposit Bonus', desc: 'First deposit ₱500+ unlocks 50% bonus credit.', tag: 'Bonus', tone: 'orange' },
     { id: 'p7', type: 'Daily Tasks', title: 'Daily Tasks', desc: 'Finish deposit / bet / login tasks to claim ₱36.50.', tag: 'Daily Tasks', tone: 'green' },
     { id: 'p8', type: 'Slot Cashback', title: 'Slot Daily Cashback', desc: 'Slot net loss cashback up to 8%. Auto next day 12:00.', tag: 'Cashback', tone: 'blue' },
-    { id: 'p9', type: 'Leaderboard', title: 'Leaderboard', desc: 'Fixed prizes by rank. Turnover decides your place, not your share of a pool.', tag: 'Leaderboard', tone: 'purple' }
+    { id: 'p9', type: 'Leaderboard', title: 'Leaderboard', desc: 'Fixed cash by rank. Your bet decides the place. Claim within 72 hours after the round ends.', tag: 'Leaderboard', tone: 'purple' }
   ];
 
   var BOARDS = [
@@ -71,7 +71,8 @@
       id: 'lb-slot', scope: 'type', target: 'Slot', play: '#/category/Slot',
       title: 'Slot Weekly Leaderboard', cycle: 'Weekly',
       start: '2026-11-02 00:00:00', end: '2026-11-08 23:59:59',
-      phase: 'live', minBet: 100, wager: 1, reward: 'Cash',
+      phase: 'live', claim: 'manual', bonusDays: 30, minBet: 100, wager: 1, reward: 'Cash',
+      botRanks: [1, 2, 3],
       myTurnover: 186420.50, myRank: 6,
       prizes: [
         { from: 1, to: 1, amount: 8000 },
@@ -89,13 +90,31 @@
         { rank: 6, account: 'wjfytn329022', turnover: 186420.50 },
         { rank: 7, account: 'hwpqer229833', turnover: 142330.00 },
         { rank: 8, account: 'ktdqio773910', turnover: 98050.75 }
-      ]
+      ],
+      history: {
+        tab: 'Last week',
+        phase: 'claim',
+        claimUntil: '2026-11-09 14:00:00',
+        roundEnd: '2026-11-01 23:59:59',
+        myTurnover: 628400.00,
+        rows: [
+          { rank: 1, account: 'wjfytn329022', turnover: 628400.00 },
+          { rank: 2, account: 'maria_ph', turnover: 512880.00 },
+          { rank: 3, account: 'Zipper123', turnover: 466210.50 },
+          { rank: 4, account: 'vbsxun440128', turnover: 388900.00 },
+          { rank: 5, account: 'jlnpwa552017', turnover: 255600.25 },
+          { rank: 6, account: 'ryucam661045', turnover: 198440.00 },
+          { rank: 7, account: 'hwpqer229833', turnover: 142330.00 },
+          { rank: 8, account: 'ktdqio773910', turnover: 98050.75 }
+        ]
+      }
     },
     {
       id: 'lb-casino', scope: 'type', target: 'Casino', play: '#/category/Casino',
       title: 'Casino Weekly Leaderboard', cycle: 'Weekly',
       start: '2026-11-02 00:00:00', end: '2026-11-08 23:59:59',
-      phase: 'live', minBet: 100, wager: 1, reward: 'Cash',
+      phase: 'live', claim: 'manual', bonusDays: 30, minBet: 100, wager: 1, reward: 'Cash',
+      botRanks: [1, 2, 3],
       myTurnover: 86.50, myRank: 0,
       prizes: [
         { from: 1, to: 1, amount: 8000 },
@@ -118,9 +137,10 @@
     {
       id: 'lb-jili', scope: 'vendor', target: 'JILI', play: '#/category/Slot',
       title: 'JILI Daily Leaderboard', cycle: 'Daily',
-      start: '2026-11-04 00:00:00', end: '2026-11-04 23:59:59',
-      phase: 'claim', claimUntil: '2026-11-08 00:10:00', minBet: 100, wager: 1, reward: 'Cash',
-      myTurnover: 96440.00, myRank: 3,
+      start: '2026-11-01 00:00:00', end: '2026-11-30 23:59:59',
+      roundEnd: '2026-11-06 23:59:59',
+      phase: 'live', claim: 'manual', bonusDays: 30, minBet: 100, wager: 1, reward: 'Cash',
+      myTurnover: 42110.00, myRank: 5,
       prizes: [
         { from: 1, to: 1, amount: 3000 },
         { from: 2, to: 2, amount: 2000 },
@@ -128,21 +148,37 @@
         { from: 4, to: 10, amount: 200 }
       ],
       rows: [
-        { rank: 1, account: 'maria_ph', turnover: 210660.00 },
-        { rank: 2, account: 'Zipper123', turnover: 154320.50 },
-        { rank: 3, account: 'wjfytn329022', turnover: 96440.00 },
-        { rank: 4, account: 'vbsxun440128', turnover: 80220.00 },
-        { rank: 5, account: 'jlnpwa552017', turnover: 64110.25 },
-        { rank: 6, account: 'ryucam661045', turnover: 42080.00 },
-        { rank: 7, account: 'hwpqer229833', turnover: 18880.00 },
-        { rank: 8, account: 'ktdqio773910', turnover: 9600.50 }
-      ]
+        { rank: 1, account: 'maria_ph', turnover: 188420.00 },
+        { rank: 2, account: 'Zipper123', turnover: 142660.50 },
+        { rank: 3, account: 'vbsxun440128', turnover: 98660.00 },
+        { rank: 4, account: 'jlnpwa552017', turnover: 73440.25 },
+        { rank: 5, account: 'wjfytn329022', turnover: 42110.00 },
+        { rank: 6, account: 'ryucam661045', turnover: 30880.00 },
+        { rank: 7, account: 'hwpqer229833', turnover: 15660.00 },
+        { rank: 8, account: 'ktdqio773910', turnover: 8420.50 }
+      ],
+      yesterday: {
+        roundEnd: '2026-11-05 23:59:59',
+        phase: 'claim',
+        claimUntil: '2026-11-08 23:59:59',
+        myTurnover: 96440.00,
+        rows: [
+          { rank: 1, account: 'maria_ph', turnover: 210660.00 },
+          { rank: 2, account: 'Zipper123', turnover: 154320.50 },
+          { rank: 3, account: 'wjfytn329022', turnover: 96440.00 },
+          { rank: 4, account: 'vbsxun440128', turnover: 80220.00 },
+          { rank: 5, account: 'jlnpwa552017', turnover: 64110.25 },
+          { rank: 6, account: 'ryucam661045', turnover: 42080.00 },
+          { rank: 7, account: 'hwpqer229833', turnover: 18880.00 },
+          { rank: 8, account: 'ktdqio773910', turnover: 9600.50 }
+        ]
+      }
     },
     {
       id: 'lb-bounty', scope: 'game', target: 'Wild Bounty Showdown', play: '#/category/Slot',
       title: 'Wild Bounty Showdown', cycle: 'This event',
       start: '2026-11-01 00:00:00', end: '2026-11-30 23:59:59',
-      phase: 'live', minBet: 100, wager: 1, reward: 'Cash',
+      phase: 'live', claim: 'manual', bonusDays: 30, minBet: 100, wager: 1, reward: 'Cash',
       myTurnover: 512800.00, myRank: 1,
       prizes: [
         { from: 1, to: 1, amount: 8000 },
@@ -165,12 +201,104 @@
 
   function maskAccount(a) {
     a = String(a || '');
-    if (a.length <= 6) return a;
-    return a.slice(0, 4) + '***' + a.slice(-3);
+    if (a.length <= 2) return a;
+    return a.slice(0, 1) + '***' + a.slice(-1);
   }
   function rankPrize(rank, prizes) {
     var hit = (prizes || []).filter(function (p) { return rank >= Number(p.from) && rank <= Number(p.to); })[0];
     return hit ? Number(hit.amount) : 0;
+  }
+
+  var RANK_BOTS = ['luna_ph88', 'carlo9921', 'mika778120', 'juno_bet6', 'aria55201', 'nico_play', 'sami66120', 'theo_ph18'];
+
+  function placeBoard(board, meAccount) {
+    var prizes = board.prizes || [];
+    var limit = 0;
+    prizes.forEach(function (p) {
+      var to = Number(p.to);
+      if (to > limit) limit = to;
+    });
+    var seen = {};
+    var bots = (board.botRanks || []).map(Number).filter(function (n) {
+      if (n < 1 || (limit && n > limit) || seen[n]) return false;
+      seen[n] = 1;
+      return true;
+    }).sort(function (a, b) { return a - b; });
+    var botSet = {};
+    bots.forEach(function (n) { botSet[n] = 1; });
+    var reals = (board.rows || []).filter(function (r) { return !r.bot; }).slice().sort(function (a, b) {
+      return Number(b.turnover) - Number(a.turnover);
+    });
+    if (!limit) limit = reals.length + bots.length;
+    var rows = [];
+    var ri = 0;
+    var bi = 0;
+    for (var rank = 1; rank <= limit; rank++) {
+      if (botSet[rank]) {
+        rows.push({ rank: rank, account: RANK_BOTS[bi % RANK_BOTS.length], turnover: 0, bot: true });
+        bi++;
+      } else if (ri < reals.length) {
+        var src = reals[ri++];
+        rows.push({ rank: rank, account: src.account, turnover: Number(src.turnover), bot: false });
+      }
+    }
+    for (var i = rows.length - 1; i >= 0; i--) {
+      if (!rows[i].bot) continue;
+      var below = null;
+      var above = null;
+      for (var n = i + 1; n < rows.length; n++) {
+        if (rows[n].turnover) { below = rows[n]; break; }
+      }
+      for (var p = i - 1; p >= 0; p--) {
+        if (!rows[p].bot && rows[p].turnover) { above = rows[p]; break; }
+      }
+      var turn = 100000;
+      if (below && above) turn = (Number(above.turnover) + Number(below.turnover)) / 2;
+      else if (below) turn = Number(below.turnover) + 18650.25;
+      else if (above) turn = Math.max(Number(above.turnover) - 18650.25, 1);
+      rows[i].turnover = Math.round(turn * 100) / 100;
+    }
+    var myRank = 0;
+    if (meAccount) {
+      var mine = rows.filter(function (r) { return !r.bot && r.account === meAccount; })[0];
+      if (mine) myRank = mine.rank;
+    }
+    return { rows: rows, myRank: myRank };
+  }
+
+  function rankClaimState(board, account, round, claimedMap) {
+    var pack = null;
+    var suffix = '';
+    if (round === 'past' && board.history) {
+      pack = board.history;
+      suffix = ':history';
+    } else if (round === 'yesterday' && board.yesterday) {
+      pack = board.yesterday;
+      suffix = ':yesterday';
+    }
+    var source = pack ? {
+      prizes: board.prizes,
+      botRanks: board.botRanks || [],
+      rows: pack.rows || []
+    } : board;
+    var placed = placeBoard(source, account || '');
+    var rank = placed.myRank;
+    var prize = rank ? rankPrize(rank, board.prizes) : 0;
+    var phase = pack ? (pack.phase || 'claim') : board.phase;
+    var key = board.id + suffix;
+    var claimed = !!(claimedMap && claimedMap[key]);
+    return {
+      placed: placed,
+      rank: rank,
+      prize: prize,
+      phase: phase,
+      key: key,
+      claimed: claimed,
+      open: phase !== 'live' && !!rank && prize > 0 && !claimed,
+      turnover: pack ? Number(pack.myTurnover || 0) : Number(board.myTurnover || 0),
+      claimUntil: pack ? pack.claimUntil : board.claimUntil,
+      roundEnd: pack ? pack.roundEnd : (board.roundEnd || board.end)
+    };
   }
 
   function seed() {
@@ -296,6 +424,8 @@
     boards: BOARDS,
     maskAccount: maskAccount,
     rankPrize: rankPrize,
+    placeBoard: placeBoard,
+    rankClaimState: rankClaimState,
     unread: unread,
     addTxn: addTxn,
     seed: seed

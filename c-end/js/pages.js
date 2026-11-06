@@ -609,103 +609,151 @@
     ];
     var group = 'type';
     var boardId = 'lb-slot';
+    var day = 'today';
     function leftText(end) {
       var t = new Date(String(end).replace(/-/g, '/')).getTime() - Date.now();
       if (isNaN(t) || t <= 0) return 'Round ended';
       var d = Math.floor(t / 86400000);
       var h = Math.floor((t % 86400000) / 3600000);
       var m = Math.floor((t % 3600000) / 60000);
-      return d + 'd ' + h + 'h ' + m + 'm left';
+      if (d > 0) return d + 'd ' + h + 'h ' + m + 'm left';
+      return h + 'h ' + m + 'm left';
     }
     function medal(rank) {
       if (rank <= 3) return '<span class="medal m' + rank + '">' + rank + '</span>';
       return String(rank);
+    }
+    function cashRule(board) {
+      return 'Claim the cash for your displayed rank within 72 hours after the round ends. Turnover ×' +
+        board.wager + ' before withdrawal. Valid for ' + (board.bonusDays || 30) + ' days.';
+    }
+    function podiumHtml(prizes) {
+      return '<div class="lb-podium">' + [2, 1, 3].map(function (rank) {
+        var amt = J365.rankPrize(rank, prizes);
+        if (!amt) return '';
+        return '<div class="lb-pod p' + rank + '"><span>' + rank + '</span><b>' + J365.money(amt) + '</b></div>';
+      }).join('') + '</div>';
     }
     function draw() {
       var list = J365.boards.filter(function (b) { return b.scope === group; });
       var board = list.filter(function (b) { return b.id === boardId; })[0] || list[0];
       if (!board) return;
       boardId = board.id;
-      var claimed = !!(S.rankClaim && S.rankClaim[board.id]);
-      var prize = board.myRank ? J365.rankPrize(board.myRank, board.prizes) : 0;
-      var below = !board.myRank && Number(board.myTurnover) < Number(board.minBet);
+      var claimState = J365.rankClaimState(board, S.loggedIn ? S.member.account : '', day, S.rankClaim);
+      var placed = claimState.placed;
+      var myRank = claimState.rank;
+      var prize = claimState.prize;
+      var betNow = claimState.turnover;
+      var phase = claimState.phase;
+      var top = board.prizes && board.prizes.length ? Number(board.prizes[0].amount) : 0;
+      var below = S.loggedIn && !myRank && betNow < Number(board.minBet);
       var me = '';
       var btn = '';
       if (!S.loggedIn) {
-        me = '<p>Login to see your rank and prize on this board.</p>';
+        me = '<p>Login to see your rank and cash prize on this board.</p>';
         btn = '<button class="btn pri" type="button" data-act="login">Login</button>';
-      } else if (board.phase === 'live' && board.myRank) {
-        me = '<p>Rank <b>' + board.myRank + '</b> · Valid turnover <b>' + J365.money(board.myTurnover) + '</b></p>' +
-          '<p>Estimated prize <b>' + J365.money(prize) + '</b>. This amount is fixed for the rank.</p>';
-        btn = '<button class="btn pri" type="button" disabled>Locks at round end</button>';
-      } else if (board.phase === 'live' && below) {
-        me = '<p>Valid turnover <b>' + J365.money(board.myTurnover) + '</b> is below the ' + J365.money(board.minBet) + ' entry line.</p>';
-        btn = '<button class="btn pri" type="button" disabled>Not ranked</button>';
-      } else if (board.phase === 'live') {
-        me = '<p>Valid turnover <b>' + J365.money(board.myTurnover) + '</b>. You are outside the paid ranks.</p>';
-        btn = '<button class="btn pri" type="button" disabled>Not ranked</button>';
-      } else if (board.myRank && claimed) {
-        me = '<p>Rank <b>' + board.myRank + '</b> · Prize <b>' + J365.money(prize) + '</b> claimed.</p>';
-        btn = '<button class="btn pri" type="button" disabled>Claimed</button>';
-      } else if (board.myRank) {
-        me = '<p>Rank <b>' + board.myRank + '</b> · Valid turnover <b>' + J365.money(board.myTurnover) + '</b></p>' +
-          '<p>Prize <b>' + J365.money(prize) + '</b> is ready. Claim before ' + board.claimUntil + '.</p>';
+      } else if (phase === 'live' && myRank) {
+        me = '<p>Rank <b>' + myRank + '</b> · Bet <b>' + J365.money(betNow) + '</b></p>' +
+          '<p>Estimated cash <b>' + J365.money(prize) + '</b>. This amount is fixed for the rank.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Claim opens at round end</button>';
+      } else if (phase === 'live' && below) {
+        me = '<p>Not qualified yet.</p>';
+        btn = '<a class="btn pri" href="' + board.play + '">Bet ' + J365.money(board.minBet) + ' to Qualify</a>';
+      } else if (phase === 'live') {
+        me = '<p>Bet <b>' + J365.money(betNow) + '</b>. You are outside the paid ranks.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Not qualified</button>';
+      } else if (claimState.open) {
+        me = '<p>Rank <b>' + myRank + '</b> · Bet <b>' + J365.money(betNow) + '</b></p>' +
+          '<p>Cash <b>' + J365.money(prize) + '</b> is the fixed prize for this rank. Claim before ' + claimState.claimUntil + '.</p>';
         btn = '<button class="btn pri" type="button" id="lbClaim">Claim ' + J365.money(prize) + '</button>';
+      } else if (myRank && prize && claimState.claimed) {
+        me = '<p>Rank <b>' + myRank + '</b> · Cash <b>' + J365.money(prize) + '</b></p><p>Claimed to your cash balance.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Claimed</button>';
       } else {
-        me = '<p>You are not on this settled board.</p>';
-        btn = '<button class="btn pri" type="button" disabled>Not ranked</button>';
+        me = '<p>Not qualified on this round.</p>';
+        btn = '<button class="btn pri" type="button" disabled>Not qualified</button>';
       }
-      var rows = board.rows.map(function (r) {
+      var rows = placed.rows.slice(0, 10).map(function (r) {
         var mine = S.loggedIn && r.account === S.member.account;
         var pay = J365.rankPrize(r.rank, board.prizes);
-        return '<tr class="' + (mine ? 'me' : '') + '"><td>' + medal(r.rank) + '</td><td>' + J365.maskAccount(r.account) +
-          '</td><td>' + J365.money(r.turnover) + '</td><td class="lb-prize">' + J365.money(pay) + '</td></tr>';
+        var initial = String(r.account || '?').slice(0, 1).toUpperCase();
+        return '<tr class="' + (mine ? 'me' : '') + '"><td>' + medal(r.rank) + '</td><td><span class="lb-ava">' + initial +
+          '</span>' + J365.maskAccount(r.account) + '</td><td>' + J365.money(r.turnover) + '</td><td class="lb-prize">' + J365.money(pay) + '</td></tr>';
       }).join('');
+      var youRank = myRank ? medal(myRank) : '--';
+      var youBet = S.loggedIn ? J365.money(betNow) : '--';
+      var youPay = myRank && prize ? J365.money(prize) : 'Not qualified';
+      var youBar = '<div class="lb-you"><span>' + youRank + '</span><span class="lb-ava">Y</span><b>You</b><span>' +
+        youBet + '</span><span class="lb-prize">' + youPay + '</span></div>';
       var ladder = board.prizes.map(function (p) {
+        var winners = Number(p.to) - Number(p.from) + 1;
         var label = p.from === p.to ? 'Rank ' + p.from : 'Rank ' + p.from + '–' + p.to;
-        return '<div class="li"><div>' + label + '</div><b>' + J365.money(p.amount) + '</b></div>';
+        return '<div class="li"><div>' + label + '<br><span class="sub">' + winners + (winners === 1 ? ' winner' : ' winners') + '</span></div><b>' + J365.money(p.amount) + '</b></div>';
       }).join('');
+      var dayTabs = '';
+      if (board.history) {
+        dayTabs = '<div class="tabs" id="lbDays">' +
+          '<button class="tab' + (day !== 'past' ? ' on' : '') + '" type="button" data-day="today">This week</button>' +
+          '<button class="tab' + (day === 'past' ? ' on' : '') + '" type="button" data-day="past">' + board.history.tab + '</button></div>';
+      } else if (board.yesterday) {
+        dayTabs = '<div class="tabs" id="lbDays">' +
+          '<button class="tab' + (day === 'today' ? ' on' : '') + '" type="button" data-day="today">Today</button>' +
+          '<button class="tab' + (day === 'yesterday' ? ' on' : '') + '" type="button" data-day="yesterday">Yesterday</button></div>';
+      }
+      var clockLine = claimState.open ? ('Claim before ' + claimState.claimUntil) : leftText(claimState.roundEnd);
       page.innerHTML = crumb([['Home', '#/home'], ['Promotions', '#/promotions'], ['Leaderboard']]) +
-        '<section class="lb-hero"><b>' + board.title + '</b><p>' + board.cycle + ' · ' + board.start + ' – ' + board.end + '</p>' +
-        '<p>' + leftText(board.phase === 'live' ? board.end : board.claimUntil || board.end) + ' · Updates every 10 minutes · GMT+8</p></section>' +
+        '<section class="lb-hero"><div class="lb-kicker">' + board.cycle + ' · ' + board.start.slice(0, 10) + ' – ' + board.end.slice(0, 10) + '</div>' +
+        '<b>' + board.title + ', up to ' + J365.money(top) + '</b>' +
+        '<p>' + clockLine + ' · Updates every 10 minutes · GMT+8</p></section>' +
+        '<div class="lb-qualify">Bet <b>' + J365.money(betNow) + '</b> / <b>' + J365.money(board.minBet) + '</b> to qualify</div>' +
         '<div class="tabs" id="lbScopes">' + groups.map(function (g) {
           return '<button class="tab' + (g.id === group ? ' on' : '') + '" type="button" data-scope="' + g.id + '">' + g.label + '</button>';
         }).join('') + '</div>' +
         '<div class="tabs" id="lbBoards">' + list.map(function (b) {
           return '<button class="tab' + (b.id === board.id ? ' on' : '') + '" type="button" data-board="' + b.id + '">' + b.target + '</button>';
-        }).join('') + '</div>' +
+        }).join('') + '</div>' + dayTabs +
         '<div class="lb-grid"><section class="card"><h3>Your place</h3>' + me +
         '<div class="row">' + btn + '<a class="btn ghost" href="' + board.play + '">Play</a></div>' +
-        '<p class="sub">Entry line ' + J365.money(board.minBet) + ' valid turnover · ' + board.reward + ' · turnover ×' + board.wager + '</p></section>' +
-        '<section class="card"><h3>Fixed prizes</h3><p class="sub">Each rank pays this amount. Turnover does not split a pool.</p>' + ladder + '</section></div>' +
-        '<section class="card" style="margin-top:12px"><table class="lb-table"><thead><tr><th>Rank</th><th>Player</th><th>Valid turnover</th><th>Prize</th></tr></thead><tbody>' +
-        rows + '</tbody></table><p class="sub">Last refresh 2026-11-05 11:00:00. Same turnover: whoever reached it first ranks higher.</p></section>' +
-        '<section class="card" style="margin-top:12px"><h3>Rules</h3>' +
-        '<p>1. Only valid turnover on this board counts. Void and cancelled bets are excluded.</p>' +
-        '<p>2. Turnover decides the rank. The prize is the fixed amount for that rank.</p>' +
-        '<p>3. Reach ' + J365.money(board.minBet) + ' valid turnover to appear. The board refreshes every 10 minutes.</p>' +
-        '<p>4. Daily rounds settle at 00:10 GMT+8 the next day. Weekly rounds settle Monday 00:10. An event-period board settles once at the end time.</p>' +
-        '<p>5. Manual claim stays open for 72 hours after settle, then expires. A cash prize needs turnover ×' + board.wager + ' before withdrawal. ×0 means no turnover lock.</p>' +
-        '<p>6. One account keeps one rank on each board. Prizes from different boards are paid separately.</p></section>';
+        '<p class="sub">' + cashRule(board) + '</p></section>' +
+        '<section class="card"><h3>Cash prizes</h3>' + podiumHtml(board.prizes) +
+        '<p class="sub">Each rank pays this cash amount. Your bet does not split a pool.</p>' + ladder + '</section></div>' +
+        '<section class="card" style="margin-top:12px"><table class="lb-table"><thead><tr><th>Rank</th><th>Player</th><th>Bet</th><th>Cash</th></tr></thead><tbody>' +
+        rows + '</tbody></table>' + youBar +
+        '<p class="sub">Last refresh 2026-11-06 21:30:00. Same bet: whoever reached it first ranks higher.</p></section>' +
+        '<section class="card" style="margin-top:12px"><h3>How it works</h3>' +
+        '<p>1. Only valid bets on this board count. Void and cancelled bets are excluded.</p>' +
+        '<p>2. Reach ' + J365.money(board.minBet) + ' in this round to qualify. The bet amount decides the rank. The cash prize is fixed for that rank.</p>' +
+        '<p>3. The board refreshes every 10 minutes. Official bet records decide the final rank.</p>' +
+        '<p>4. ' + cashRule(board) + '</p>' +
+        '<p>5. One account keeps one rank on each board. Cash from different boards is paid separately.</p></section>';
       document.getElementById('lbScopes').onclick = function (e) {
         var b = e.target.closest('[data-scope]'); if (!b) return;
         group = b.getAttribute('data-scope');
         var first = J365.boards.filter(function (x) { return x.scope === group; })[0];
         boardId = first ? first.id : boardId;
+        day = 'today';
         draw();
       };
       document.getElementById('lbBoards').onclick = function (e) {
         var b = e.target.closest('[data-board]'); if (!b) return;
         boardId = b.getAttribute('data-board');
+        day = 'today';
+        draw();
+      };
+      var days = document.getElementById('lbDays');
+      if (days) days.onclick = function (e) {
+        var b = e.target.closest('[data-day]'); if (!b) return;
+        day = b.getAttribute('data-day');
         draw();
       };
       var claim = document.getElementById('lbClaim');
       if (claim) claim.onclick = function () {
         if (!S.loggedIn) return J365Shell.requireAuth('#/leaderboard');
-        if (S.rankClaim && S.rankClaim[board.id]) return J365Shell.toast('Already claimed');
-        var pay = J365.rankPrize(board.myRank, board.prizes);
+        var again = J365.rankClaimState(board, S.member.account, day, S.rankClaim);
+        if (!again.open) return J365Shell.toast(again.claimed ? 'Already claimed' : 'Not qualified');
+        var pay = again.prize;
         S.rankClaim = S.rankClaim || {};
-        S.rankClaim[board.id] = 1;
+        S.rankClaim[again.key] = 1;
         S.cash += pay;
         J365.addTxn({
           id: 'T' + Date.now(),
@@ -713,7 +761,7 @@
           amount: pay,
           status: '已领取',
           time: J365.fmt(new Date()),
-          channel: 'Bonus',
+          channel: 'Cash',
           order: 'L' + Date.now()
         });
         J365.persist();

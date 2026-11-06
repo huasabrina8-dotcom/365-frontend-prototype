@@ -287,6 +287,17 @@ img { max-width: 100%; display: block; }
 .lb-hero { background: linear-gradient(120deg, #6D35FF, #f26839); color: #fff; border-radius: 12px; padding: 18px 20px; }
 .lb-hero b { font-size: 22px; }
 .lb-hero p { margin: 6px 0 0; font-size: 13px; }
+.lb-kicker { font-size: 13px; opacity: .9; }
+.lb-ava { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: 8px; border-radius: 50%; background: #6D35FF; color: #fff; font-size: 12px; font-weight: 800; vertical-align: middle; }
+.lb-you { display: grid; grid-template-columns: 52px 36px 1fr 1.2fr .9fr; gap: 8px; align-items: center; margin-top: 8px; padding: 10px 8px; border-radius: 10px; background: #eef6ff; font-size: 13px; }
+.lb-you .lb-ava { margin-right: 0; }
+.lb-qualify { margin: 12px 0; padding: 10px 14px; border-radius: 10px; background: #fff; font-size: 14px; }
+.lb-podium { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
+.lb-pod { flex: 1; text-align: center; border-radius: 10px 10px 4px 4px; padding: 8px 4px; color: #fff; }
+.lb-pod span { display: block; font-size: 12px; opacity: .9; }
+.lb-pod.p1 { background: #e8b931; min-height: 84px; }
+.lb-pod.p2 { background: #9aa3ad; min-height: 64px; }
+.lb-pod.p3 { background: #c47b4a; min-height: 52px; }
 .lb-grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 12px; }
 .lb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .lb-table th { text-align: left; color: #888; font-weight: 600; padding: 8px; }
