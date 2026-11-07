@@ -69,12 +69,10 @@
       '<button class="btn pri block" id="doWd">Submit</button></div>';
   }
   function viewLeaderboard() {
-    var group = viewLeaderboard.group || 'type';
     var boardId = viewLeaderboard.boardId || 'lb-slot';
     var day = viewLeaderboard.day || 'today';
-    var groups = [{ id: 'type', label: 'Game type' }, { id: 'vendor', label: 'Provider' }, { id: 'game', label: 'Game' }];
-    var list = J365.boards.filter(function (b) { return b.scope === group; });
-    var board = list.filter(function (b) { return b.id === boardId; })[0] || list[0];
+    var board = J365.boards.filter(function (b) { return b.id === boardId; })[0] || J365.boards[0];
+    viewLeaderboard.group = board.scope;
     viewLeaderboard.boardId = board.id;
     var claimState = J365.rankClaimState(board, S.loggedIn ? S.member.account : '', day, S.rankClaim);
     var placed = claimState.placed;
@@ -118,58 +116,51 @@
     }
     function medal(rank) {
       if (rank <= 3) return '<span class="medal m' + rank + '">' + rank + '</span>';
-      return String(rank);
+      return '<span class="rn">' + rank + '</span>';
     }
-    var rows = placed.rows.slice(0, 10).map(function (r) {
-      var mine = S.loggedIn && r.account === S.member.account;
-      var initial = String(r.account || '?').slice(0, 1).toUpperCase();
-      return '<div class="lbr' + (mine ? ' me' : '') + '"><span>' + medal(r.rank) + '</span><div><span class="ava">' + initial +
-        '</span>' + J365.maskAccount(r.account) + '<br><small>Bet ' + money(r.turnover) + '</small></div><b>' +
+    function ava(account) {
+      var ch = String(account || '?').slice(0, 1).toUpperCase();
+      var tones = ['#6d8bff', '#f0a05a', '#7d6bff', '#3db8a0', '#e07a9a', '#e0b03a'];
+      return '<span class="ava" style="background:' + tones[ch.charCodeAt(0) % tones.length] + '">' + ch + '</span>';
+    }
+    var rows = placed.rows.slice(0, 8).map(function (r) {
+      var tone = r.rank <= 3 ? (' r' + r.rank) : '';
+      return '<div class="lbr' + tone + '"><span>' + medal(r.rank) + '</span>' + ava(r.account) +
+        '<div class="nm">' + J365.maskAccount(r.account) + '<br><small>' + money(r.turnover) + '</small></div><b>' +
         money(J365.rankPrize(r.rank, board.prizes)) + '</b></div>';
     }).join('');
-    var youPay = myRank && prize ? money(prize) : 'Not qualified';
-    var youBar = '<div class="lb-you"><span>' + (myRank ? medal(myRank) : '--') + '</span><div><b>You</b><br><small>' +
-      (S.loggedIn ? ('Bet ' + money(betNow)) : '--') + '</small></div><b>' + youPay + '</b></div>';
+    var youBar = '<div class="lbr you"><span>' + (myRank ? medal(myRank) : '<span class="rn">--</span>') + '</span>' +
+      ava(S.loggedIn ? S.member.account : 'You') + '<div class="nm"><b>You</b><br><small>' +
+      (!S.loggedIn ? 'Login to see your rank' : (myRank ? money(betNow) : 'Not qualified')) +
+      '</small></div><b>' + ((myRank && prize) ? money(prize) : '') + '</b></div>';
     var podium = '<div class="lbp">' + [2, 1, 3].map(function (rank) {
       var amt = J365.rankPrize(rank, board.prizes);
       if (!amt) return '';
       return '<i class="p' + rank + '"><span>' + rank + '</span><b>' + money(amt) + '</b></i>';
     }).join('') + '</div>';
-    var ladder = board.prizes.map(function (p) {
-      var winners = Number(p.to) - Number(p.from) + 1;
-      var label = p.from === p.to ? 'Rank ' + p.from : 'Rank ' + p.from + '–' + p.to;
-      return '<div class="li"><div>' + label + '<br><small>' + winners + (winners === 1 ? ' winner' : ' winners') + '</small></div><b>' + money(p.amount) + '</b></div>';
-    }).join('');
-    var dayTabs = '';
-    if (board.history) {
-      dayTabs = '<div class="htabs" id="lbDays">' +
-        '<button class="htab' + (day !== 'past' ? ' on' : '') + '" data-day="today">This week</button>' +
-        '<button class="htab' + (day === 'past' ? ' on' : '') + '" data-day="past">' + board.history.tab + '</button></div>';
-    } else if (board.yesterday) {
-      dayTabs = '<div class="htabs" id="lbDays">' +
-        '<button class="htab' + (day === 'today' ? ' on' : '') + '" data-day="today">Today</button>' +
-        '<button class="htab' + (day === 'yesterday' ? ' on' : '') + '" data-day="yesterday">Yesterday</button></div>';
-    }
-    return '<div class="lbh"><div class="k">' + board.cycle + ' · ' + board.start.slice(0, 10) + ' – ' + board.end.slice(0, 10) + '</div>' +
-      '<b>' + board.title + ', up to ' + money(top) + '</b>' +
-      '<p>' + clock + ' · Updates every 10 minutes · GMT+8</p></div>' +
-      '<div class="lbq">Bet <b>' + money(betNow) + '</b> / <b>' + money(board.minBet) + '</b> to qualify</div>' +
-      '<div class="htabs" id="lbScopes">' + groups.map(function (g) {
-        return '<button class="htab' + (g.id === group ? ' on' : '') + '" data-scope="' + g.id + '">' + g.label + '</button>';
-      }).join('') + '</div>' +
-      '<div class="htabs" id="lbBoards">' + list.map(function (b) {
-        return '<button class="htab' + (b.id === board.id ? ' on' : '') + '" data-board="' + b.id + '">' + b.target + '</button>';
-      }).join('') + '</div>' + dayTabs +
-      '<div class="card"><b>Your place</b>' + me + btn +
-      '<p class="sub">Claim the cash for your displayed rank within 72 hours after the round ends. Turnover ×' + board.wager + ' before withdrawal. Valid for ' + (board.bonusDays || 30) + ' days.</p></div>' +
-      '<div class="card"><b>Cash prizes</b>' + podium +
-      '<p class="sub">Each rank pays this cash amount. Your bet does not split a pool.</p>' + ladder + '</div>' +
-      '<div class="card"><b>Ranking</b><div class="lbr head"><span>Rank</span><span>Player / Bet</span><span>Cash</span></div>' + rows + youBar +
-      '<p class="sub">Last refresh 2026-11-06 21:30:00. Same bet: whoever reached it first ranks higher.</p></div>' +
+    var pastKind = board.history ? 'past' : (board.yesterday ? 'yesterday' : '');
+    var onPast = day === 'past' || day === 'yesterday';
+    var pastLabel = onPast ? (board.history ? 'This week' : 'Today') : (board.history ? board.history.tab : 'Yesterday');
+    var pastBtn = pastKind ? '<button class="lb-past' + (onPast ? ' on' : '') + '" id="lbDays" data-day="' + (onPast ? 'today' : pastKind) + '">' + pastLabel + '</button>' : '';
+    var rawClock = clock.indexOf('left') >= 0 ? ('Time Left ' + clock.replace(/ left$/, '')) : clock;
+    var menu = '';
+    J365.boards.forEach(function (b) {
+      menu += '<button class="hm' + (b.id === board.id ? ' on' : '') + '" data-board="' + b.id + '">' + b.target + '</button>';
+    });
+    var cta = btn.replace('class="btn pri block"', 'class="lb-cta"').replace('class="btn pri"', 'class="lb-cta"');
+    return '<div class="lb-stage"><div class="lb-top">' +
+      '<div class="lb-title"><b>' + board.title + ', up to <em>' + money(top) + '</em></b>' +
+      '<p><span class="lb-clock">' + rawClock + '</span></p></div>' + pastBtn + '</div>' +
+      '<div class="hm-row" id="lbMenu">' + menu + '</div>' +
+      '<div class="lb-side">' + podium +
+      '<div class="lb-need">Bet <b>' + money(S.loggedIn ? betNow : 0) + '</b> / <b>' + money(board.minBet) + '</b></div>' +
+      cta + '<p class="lb-note">Data updates every 10 minutes</p></div>' +
+      '<div class="lb-list"><div class="lbr head"><span>Rank</span><span></span><span>Nickname / Bet</span><span>Cash</span></div>' +
+      rows + youBar + '</div></div>' +
       '<div class="card how"><b>How it works</b>' +
       '<p>1. Only valid bets on this board count.</p>' +
       '<p>2. Reach ' + money(board.minBet) + ' to qualify. Bet decides the rank. Cash is fixed for that rank.</p>' +
-      '<p>3. Refreshes every 10 minutes. Official bet records decide the final rank.</p>' +
+      '<p>3. Refreshes every 10 minutes. Same bet: whoever reached it first ranks higher.</p>' +
       '<p>4. Claim within 72 hours. Turnover ×' + board.wager + '. Valid ' + (board.bonusDays || 30) + ' days.</p>' +
       '<p>5. One rank per board. Cash from different boards is paid separately.</p></div>';
   }
@@ -272,19 +263,18 @@
         render();
       };
     });
-    document.querySelectorAll('#lbBoards [data-board]').forEach(function (b) {
+    document.querySelectorAll('#lbMenu [data-board]').forEach(function (b) {
       b.onclick = function () {
         viewLeaderboard.boardId = b.getAttribute('data-board');
         viewLeaderboard.day = 'today';
         render();
       };
     });
-    document.querySelectorAll('#lbDays [data-day]').forEach(function (b) {
-      b.onclick = function () {
-        viewLeaderboard.day = b.getAttribute('data-day');
-        render();
-      };
-    });
+    var days = document.getElementById('lbDays');
+    if (days) days.onclick = function () {
+      viewLeaderboard.day = days.getAttribute('data-day');
+      render();
+    };
     var lb = $('lbClaim');
     if (lb) lb.onclick = function () {
       if (!S.loggedIn) return openLogin();
